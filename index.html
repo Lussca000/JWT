@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teste de login + registro JWT + SQLite</title>
+  </head>
+  <body>
+    <h1>Registro</h1>
+    <form id="registerForm">
+      <input type="email" id="regEmail" placeholder="Email" required />
+      <input type="password" id="regSenha" placeholder="Senha" required />
+      <button type="submit">Registrar</button>
+    </form>
+
+    <h1>Login</h1>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="senha" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+
+    <button id="rotaProtegida">Acessar Rota Protegida</button>
+    <button id="listarUsuarios">Listar Usuários</button>
+
+    <pre id="resultado"></pre>
+
+    <script>
+      const registerForm = document.getElementById("registerForm");
+      const loginForm = document.getElementById("loginForm");
+      const rotaProtegidaBtn = document.getElementById("rotaProtegida");
+      const listarUsuariosBtn = document.getElementById("listarUsuarios");
+      const resultado = document.getElementById("resultado");
+
+      let token = null;
+
+      // Registro
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("regEmail").value;
+        const senha = document.getElementById("regSenha").value;
+
+        const res = await fetch("http://localhost:3000/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha }),
+        });
+
+        const data = await res.json();
+        resultado.textContent = JSON.stringify(data, null, 2);
+      });
+
+      // Login
+      loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const senha = document.getElementById("senha").value;
+
+        const res = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha }),
+        });
+
+        const data = await res.json();
+        resultado.textContent = JSON.stringify(data, null, 2);
+
+        if (data.token) {
+          token = data.token;
+          localStorage.setItem("token", token);
+        }
+      });
+
+      // Acessar rota protegida
+      rotaProtegidaBtn.addEventListener("click", async () => {
+        const res = await fetch("http://localhost:3000/protegido", {
+          headers: {
+            Authorization: "Bearer " + (token || localStorage.getItem("token")),
+          },
+        });
+
+        const data = await res.json();
+        resultado.textContent = JSON.stringify(data, null, 2);
+      });
+
+      // Listar usuários
+      listarUsuariosBtn.addEventListener("click", async () => {
+        const res = await fetch("http://localhost:3000/usuarios");
+        const data = await res.json();
+        resultado.textContent = JSON.stringify(data, null, 2);
+      });
+    </script>
+  </body>
+</html>
